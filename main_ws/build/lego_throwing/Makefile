@@ -378,6 +378,21 @@ roscpp_generate_messages_py/fast:
 .PHONY : roscpp_generate_messages_py/fast
 
 # Convenience name for target.
+lego_throwing/CMakeFiles/addCollisionObject.dir/rule:
+	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lego_throwing/CMakeFiles/addCollisionObject.dir/rule
+.PHONY : lego_throwing/CMakeFiles/addCollisionObject.dir/rule
+
+# Convenience name for target.
+addCollisionObject: lego_throwing/CMakeFiles/addCollisionObject.dir/rule
+
+.PHONY : addCollisionObject
+
+# fast build rule for target.
+addCollisionObject/fast:
+	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f lego_throwing/CMakeFiles/addCollisionObject.dir/build.make lego_throwing/CMakeFiles/addCollisionObject.dir/build
+.PHONY : addCollisionObject/fast
+
+# Convenience name for target.
 lego_throwing/CMakeFiles/trajectory_msgs_generate_messages_eus.dir/rule:
 	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lego_throwing/CMakeFiles/trajectory_msgs_generate_messages_eus.dir/rule
 .PHONY : lego_throwing/CMakeFiles/trajectory_msgs_generate_messages_eus.dir/rule
@@ -1352,6 +1367,33 @@ graph_msgs_generate_messages_py/fast:
 	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f lego_throwing/CMakeFiles/graph_msgs_generate_messages_py.dir/build.make lego_throwing/CMakeFiles/graph_msgs_generate_messages_py.dir/build
 .PHONY : graph_msgs_generate_messages_py/fast
 
+src/addCollisionObject.o: src/addCollisionObject.cpp.o
+
+.PHONY : src/addCollisionObject.o
+
+# target to build an object file
+src/addCollisionObject.cpp.o:
+	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f lego_throwing/CMakeFiles/addCollisionObject.dir/build.make lego_throwing/CMakeFiles/addCollisionObject.dir/src/addCollisionObject.cpp.o
+.PHONY : src/addCollisionObject.cpp.o
+
+src/addCollisionObject.i: src/addCollisionObject.cpp.i
+
+.PHONY : src/addCollisionObject.i
+
+# target to preprocess a source file
+src/addCollisionObject.cpp.i:
+	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f lego_throwing/CMakeFiles/addCollisionObject.dir/build.make lego_throwing/CMakeFiles/addCollisionObject.dir/src/addCollisionObject.cpp.i
+.PHONY : src/addCollisionObject.cpp.i
+
+src/addCollisionObject.s: src/addCollisionObject.cpp.s
+
+.PHONY : src/addCollisionObject.s
+
+# target to generate assembly for a file
+src/addCollisionObject.cpp.s:
+	cd /home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build && $(MAKE) -f lego_throwing/CMakeFiles/addCollisionObject.dir/build.make lego_throwing/CMakeFiles/addCollisionObject.dir/src/addCollisionObject.cpp.s
+.PHONY : src/addCollisionObject.cpp.s
+
 src/throw.o: src/throw.cpp.o
 
 .PHONY : src/throw.o
@@ -1405,6 +1447,7 @@ help:
 	@echo "... moveit_msgs_generate_messages_lisp"
 	@echo "... moveit_msgs_generate_messages_eus"
 	@echo "... roscpp_generate_messages_py"
+	@echo "... addCollisionObject"
 	@echo "... trajectory_msgs_generate_messages_eus"
 	@echo "... actionlib_generate_messages_lisp"
 	@echo "... roscpp_generate_messages_nodejs"
@@ -1471,6 +1514,9 @@ help:
 	@echo "... actionlib_generate_messages_nodejs"
 	@echo "... tf_generate_messages_cpp"
 	@echo "... graph_msgs_generate_messages_py"
+	@echo "... src/addCollisionObject.o"
+	@echo "... src/addCollisionObject.i"
+	@echo "... src/addCollisionObject.s"
 	@echo "... src/throw.o"
 	@echo "... src/throw.i"
 	@echo "... src/throw.s"

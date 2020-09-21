@@ -1351,6 +1351,19 @@ roscpp_generate_messages_py/fast:
 .PHONY : roscpp_generate_messages_py/fast
 
 #=============================================================================
+# Target rules for targets named addCollisionObject
+
+# Build rule for target.
+addCollisionObject: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 addCollisionObject
+.PHONY : addCollisionObject
+
+# fast build rule for target.
+addCollisionObject/fast:
+	$(MAKE) -f lego_throwing/CMakeFiles/addCollisionObject.dir/build.make lego_throwing/CMakeFiles/addCollisionObject.dir/build
+.PHONY : addCollisionObject/fast
+
+#=============================================================================
 # Target rules for targets named trajectory_msgs_generate_messages_eus
 
 # Build rule for target.
@@ -3781,6 +3794,7 @@ help:
 	@echo "... moveit_msgs_generate_messages_lisp"
 	@echo "... moveit_msgs_generate_messages_eus"
 	@echo "... roscpp_generate_messages_py"
+	@echo "... addCollisionObject"
 	@echo "... trajectory_msgs_generate_messages_eus"
 	@echo "... actionlib_generate_messages_lisp"
 	@echo "... roscpp_generate_messages_nodejs"

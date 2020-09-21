@@ -7,8 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export LD_LIBRARY_PATH='/home/bspetersson/Desktop/ur_ws/devel/lib:/opt/ros/melodic/lib'
-export PKG_CONFIG_PATH='/home/bspetersson/Desktop/ur_ws/devel/lib/pkgconfig:/opt/ros/melodic/lib/pkgconfig'
 export PWD='/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/build'
-export PYTHONPATH='/home/bspetersson/Desktop/ur_ws/devel/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages:/opt/movidius/caffe/python'
-export ROS_PACKAGE_PATH='/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/src:/home/bspetersson/Desktop/ur_ws/src:/opt/ros/melodic/share'

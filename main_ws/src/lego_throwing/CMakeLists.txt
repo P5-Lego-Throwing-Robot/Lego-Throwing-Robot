@@ -209,3 +209,6 @@ include_directories(
 
 add_executable(throw src/throw.cpp)
 target_link_libraries(throw ${catkin_LIBRARIES})
+
+add_executable(addCollisionObject src/addCollisionObject.cpp)
+target_link_libraries(addCollisionObject ${catkin_LIBRARIES})

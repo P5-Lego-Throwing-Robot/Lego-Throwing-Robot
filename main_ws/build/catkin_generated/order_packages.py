@@ -2,4 +2,4 @@
 source_root_dir = '/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/src'
 whitelisted_packages = ''.split(';') if '' != '' else []
 blacklisted_packages = ''.split(';') if '' != '' else []
-underlay_workspaces = '/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/devel;/home/bspetersson/Desktop/ur_ws/devel;/opt/ros/melodic'.split(';') if '/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/devel;/home/bspetersson/Desktop/ur_ws/devel;/opt/ros/melodic' != '' else []
+underlay_workspaces = '/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/devel;/opt/ros/melodic'.split(';') if '/home/bspetersson/Documents/P5_Lego_Throwing_Robot/Code/Lego-Throwing-Robot/main_ws/devel;/opt/ros/melodic' != '' else []
