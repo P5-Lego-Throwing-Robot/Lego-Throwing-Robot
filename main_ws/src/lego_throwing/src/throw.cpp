@@ -30,7 +30,6 @@ double offset = 0.109492;
 
 
 
-
 void move() {
     static const std::string PLANNING_GROUP = "manipulator";
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
@@ -91,33 +90,152 @@ void cartesianPath() {
     geometry_msgs::Pose target_pose = start_pose;
 
     target_pose.position.x += 0.5;
-    target_pose.position.z += 0.3;
-    waypoints.push_back(target_pose);
-
-    target_pose.position.x += 0.2;
-    target_pose.position.z += 0.2;
+    target_pose.position.z += 0.5;
     waypoints.push_back(target_pose);
 
     moveit_msgs::RobotTrajectory trajectory;
     const double jump_threshold = 0.0;
-    const double eef_step = 0.01;
+    const double eef_step = 0.05;
     double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     ROS_INFO("fraction: %f", fraction);
 
+    double positions[trajectory.joint_trajectory.points.size()][6];
+
+
+    moveit_msgs::RobotTrajectory trajectory2;
+
+    std::vector<trajectory_msgs::JointTrajectoryPoint> test;
+
+
+    ROS_INFO("1111");
     for (int j = 0; j < trajectory.joint_trajectory.points.size(); j++) {
-        for (int i = 0; i < trajectory.joint_trajectory.points[j].positions.size(); i++) {
-            ROS_INFO("positions: %f", trajectory.joint_trajectory.points[j].positions[i]);
+        ROS_INFO("2222");
+
+        trajectory_msgs::JointTrajectoryPoint point;
+
+        ROS_INFO("3333");
+        
+        std::vector<double> pos;
+        std::vector<double> vel;
+        std::vector<double> acc;
+
+        ROS_INFO("4444");
+
+
+
+
+        for (int a = 0; a < trajectory.joint_trajectory.points[j].positions.size(); a++) {
+            ROS_INFO("aaaa");
+            //trajectory.joint_trajectory.points[j].positions[a] = 0.0;
+            pos.push_back(trajectory.joint_trajectory.points[j].positions[a]);
+            ROS_INFO("bbbb");
+            ROS_INFO("fffffff: %f", pos[a]);
+            ROS_INFO("cccc");
         }
+        for (int b = 0; b < trajectory.joint_trajectory.points[j].velocities.size(); b++) {
+            //trajectory.joint_trajectory.points[j].velocities[b] = 0.0;
+            ROS_INFO("dddd");
+            vel.push_back(trajectory.joint_trajectory.points[j].velocities[b]);
+            ROS_INFO("eeee");
+        }
+        for (int c = 0; c < trajectory.joint_trajectory.points[j].accelerations.size(); c++) {
+            //trajectory.joint_trajectory.points[j].accelerations[c] = 0.0;
+            ROS_INFO("ffff");
+            acc.push_back(trajectory.joint_trajectory.points[j].accelerations[c]);
+            ROS_INFO("gggg");
+        }
+
+        ROS_INFO("5555");
+
+        point.positions = pos;
+        point.velocities = vel;
+        point.accelerations = acc;
+
+        ROS_INFO("6666");
+
+        test.push_back(point);
+
+        ROS_INFO("7777");
+
+        ROS_INFO("seq: %i", trajectory.joint_trajectory.header.seq);
+        ROS_INFO("sec: %i", trajectory.joint_trajectory.header.stamp.sec);
+        ROS_INFO("nsec: %i", trajectory.joint_trajectory.header.stamp.nsec);
+        ROS_INFO("frame_id: %s", trajectory.joint_trajectory.header.frame_id.c_str());
         for (int i = 0; i < trajectory.joint_trajectory.points[j].velocities.size(); i++) {
-            ROS_INFO("velocities: %f", trajectory.joint_trajectory.points[j].velocities[i]);
+            //ROS_INFO("effort: %f", trajectory.joint_trajectory.points[j].accelerations[i]);
         }
-        for (int i = 0; i < trajectory.joint_trajectory.points[j].accelerations.size(); i++) {
-            ROS_INFO("accelerations: %f", trajectory.joint_trajectory.points[j].accelerations[i]);
-        }
-        ROS_INFO("");
+        ROS_INFO(" ");
     }
 
-    move_group.execute(trajectory);
+
+
+
+
+
+    ROS_INFO("8888");
+
+    trajectory2.joint_trajectory.points = test;
+
+    std_msgs::Header header;
+    header.frame_id = "world";
+    trajectory2.joint_trajectory.header = header;
+
+    trajectory2.joint_trajectory.header.seq = trajectory.joint_trajectory.header.seq;
+    trajectory2.joint_trajectory.header.stamp = trajectory.joint_trajectory.header.stamp;
+
+    trajectory2.joint_trajectory.joint_names = trajectory.joint_trajectory.joint_names;
+
+    ROS_INFO("joint name: %s", trajectory2.joint_trajectory.joint_names[1].c_str());
+
+    trajectory2.joint_trajectory = trajectory.joint_trajectory;
+
+    ROS_INFO("9999");
+
+    ROS_INFO("fractsdfsdfsdion: %f", trajectory2.joint_trajectory.points[3].positions[1]);
+
+    move_group.execute(trajectory2);
+}
+
+
+void testTraj() {
+    static const std::string PLANNING_GROUP = "manipulator";
+    moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
+    std::vector<geometry_msgs::Pose> waypoints;
+
+    geometry_msgs::Pose start_pose = move_group.getCurrentPose().pose;
+    //waypoints.push_back(start_pose);
+
+
+    geometry_msgs::Pose target_pose = start_pose;
+
+    target_pose.position.x += 0.5;
+    target_pose.position.z += 0.5;
+    waypoints.push_back(target_pose);
+
+    moveit_msgs::RobotTrajectory trajectory;
+    const double jump_threshold = 0.0;
+    const double eef_step = 0.05;
+    double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    ROS_INFO("fraction: %f", fraction);
+
+    moveit_msgs::RobotTrajectory trajectory2;
+
+    //trajectory2.joint_trajectory.header = trajectory.joint_trajectory.header;
+    trajectory2.joint_trajectory.joint_names = trajectory.joint_trajectory.joint_names;
+    //trajectory2.joint_trajectory.points = trajectory.joint_trajectory.points;
+
+    for (int i = 0; i < trajectory.joint_trajectory.points.size(); i++) {
+        ROS_INFO("size: %i", trajectory2.joint_trajectory.points.size());
+        trajectory_msgs::JointTrajectoryPoint point;
+        point.positions = trajectory.joint_trajectory.points[i].positions;
+        point.velocities = trajectory.joint_trajectory.points[i].velocities;
+        point.accelerations = trajectory.joint_trajectory.points[i].accelerations;
+        point.effort = trajectory.joint_trajectory.points[i].effort;
+        point.time_from_start = trajectory.joint_trajectory.points[i].time_from_start;
+        trajectory2.joint_trajectory.points.push_back(point);
+    }
+
+    move_group.execute(trajectory2);
 }
 
 
@@ -225,5 +343,5 @@ int main(int argc, char** argv) {
     //addObject();
 
     //move();
-    cartesianPath();
+    testTraj();
 }

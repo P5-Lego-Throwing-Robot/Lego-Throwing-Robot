@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   moveit_ros_planning_interface
   moveit_visual_tools
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -56,11 +57,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -212,3 +211,6 @@ target_link_libraries(throw ${catkin_LIBRARIES})
 
 add_executable(addCollisionObject src/addCollisionObject.cpp)
 target_link_libraries(addCollisionObject ${catkin_LIBRARIES})
+
+add_executable(needForSpeed src/needForSpeed.cpp)
+target_link_libraries(needForSpeed ${catkin_LIBRARIES})
