@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
 
 
 
-    double travelTime = 10.0;
+    double travelTime = 3.0;
 
 
     double a0j1 = joint_start[0];
@@ -277,11 +277,14 @@ int main(int argc, char** argv) {
         point.velocities = vel;
         point.accelerations = acc;
 
+        ros::Duration seconds(time);
+        point.time_from_start = seconds;
+
         //point.positions = trajectory.joint_trajectory.points[i].positions;
         //point.velocities = trajectory.joint_trajectory.points[i].velocities;
         //point.accelerations = trajectory.joint_trajectory.points[i].accelerations;
         //point.effort = trajectory.joint_trajectory.points[i].effort;
-        point.time_from_start = trajectory.joint_trajectory.points[i].time_from_start;
+        //point.time_from_start = trajectory.joint_trajectory.points[i].time_from_start;
 
         trajectory2.joint_trajectory.points.push_back(point);
     }
