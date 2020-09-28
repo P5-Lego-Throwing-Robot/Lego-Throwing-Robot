@@ -7,7 +7,7 @@
 const std::string PLANNING_GROUP = "manipulator";
 const double PI = M_PI;
 
-double throwingVelocity = 5.0; // m/s
+double throwingVelocity = 2.0; // m/s
 double throwingAngle = PI/4; // radians
 double offset = 0.109492;
 /*
@@ -15,10 +15,15 @@ std::vector<double> joint_position_start{0.0, -PI/2, (PI*3)/4, 0.0, PI/2, 0.0};
 std::vector<double> joint_position_throw{0.0, -PI/3, PI/5, 0.0, PI/2, 0.0};
 std::vector<double> joint_position_end{0.0, -PI/5, -PI/5, 0.0, PI/2, 0.0};
 */
-std::vector<double> joint_position_start{0.0, -(PI*5)/8, -(PI*4)/8, 0.0, PI/2, 0.0};
-std::vector<double> joint_position_throw{0.0, -PI/2, -(PI*2)/8, 0.0, PI/2, 0.0};
-std::vector<double> joint_position_end{0.0, -(PI*2)/8, 0.0, 0.0, PI/2, 0.0};
+/*
+std::vector<double> joint_position_start{0.0, -(PI*7)/8, -(PI*1)/8, 0.0, PI/2, 0.0};
+std::vector<double> joint_position_throw{0.0, -(PI*5)/8, -(PI*1)/8, 0.0, PI/2, 0.0};
+std::vector<double> joint_position_end{0.0, -(PI*5)/8, -(PI*1)/8, 0.0, PI/2, 0.0};
+*/
 
+std::vector<double> joint_position_start{0.0, -(PI*2)/8, (PI*6)/8, 0.0, PI/2, 0.0};
+std::vector<double> joint_position_throw{0.0, -(PI*3)/8, (PI*4)/8, -(PI*1)/8, PI/2, 0.0};
+std::vector<double> joint_position_end{0.0, -(PI*3)/8, (PI*4)/8, -(PI*2)/8, PI/2, 0.0};
 
 double getJointOneAngle(double x, double y) {
     double distToPoint = sqrt(pow(x, 2) + pow(y, 2));
@@ -215,7 +220,7 @@ int main(int argc, char** argv) {
 
     std::vector<double> throwingVelocityVector = vectorizeThrowingVelocity(throwingVelocity, throwingAngle);
     throwingVelocityVector.push_back(0.0);
-    throwingVelocityVector.push_back(0.0);
+    throwingVelocityVector.push_back(-4.33*throwingVelocity);
     throwingVelocityVector.push_back(0.0);
     std::vector<double> jointVelocitiesVector = getJointVelocities(throwingVelocityVector, joint_position_throw);
 
@@ -223,9 +228,10 @@ int main(int argc, char** argv) {
 
     moveit_msgs::RobotTrajectory trajectory;
 
+    double time = 1.3/throwingVelocity;
     std::vector<double> ZeroVelocityVector{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    trajectory = addToATrajectory(trajectory, joint_position_start, joint_position_throw, ZeroVelocityVector, jointVelocitiesVector, 0.5, 20, true, 0.0);
-    trajectory = addToATrajectory(trajectory, joint_position_throw, joint_position_end, jointVelocitiesVector, ZeroVelocityVector, 1.0, 20, false, 0.3);
+    trajectory = addToATrajectory(trajectory, joint_position_start, joint_position_throw, ZeroVelocityVector, jointVelocitiesVector, time, 50, true, 0.0);
+    trajectory = addToATrajectory(trajectory, joint_position_throw, joint_position_end, jointVelocitiesVector, ZeroVelocityVector, 3.0/throwingVelocity, 50, false, time);
 
 
 
@@ -249,6 +255,6 @@ int main(int argc, char** argv) {
 
     move_group.execute(trajectory);
 
-    double test_vel = get_throwing_velocity(10.0, 10.0, 13.0, 10.0, PI/4);
+    double test_vel = get_throwing_velocity(0.0, 0.0, 2.0, 0.0, PI/4);
     ROS_INFO("test_vel: %f", test_vel);
 }
