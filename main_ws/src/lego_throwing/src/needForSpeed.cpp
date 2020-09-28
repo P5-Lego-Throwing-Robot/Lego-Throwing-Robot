@@ -8,6 +8,8 @@
 
 #include <math.h>
 
+#include "lego_throwing/FindBestInverseKinematicsSolution.h"
+#include <cstdlib>
 
 
 
@@ -79,8 +81,7 @@ void jointTarget() {
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-
-    std::vector<double> joints{0.1, -pi/2, pi/2, 0.0, 0.0, 0.0};
+    std::vector<double> joints{0.58715242, -2.06680655, -1.59263468, 0.44127813, 1.18455327, 1.57040942};
 
     move_group.setJointValueTarget(joints);
 
@@ -95,17 +96,67 @@ void jointTarget() {
 
 
 
+std::vector<double> getJointVelocities(std::vector<double> endEffectorVelocities, std::vector<double> jointAngles) {
+
+    robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
+    moveit::core::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+    moveit::core::RobotStatePtr kinematic_state(new moveit::core::RobotState(kinematic_model));
+
+    const moveit::core::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("manipulator");
+
+    kinematic_state->setJointGroupPositions(joint_model_group, jointAngles);
+
+    Eigen::MatrixXd jacobian;
+    jacobian = kinematic_state->getJacobian(joint_model_group);
+
+    ROS_INFO_STREAM("Jacobian: \n" << jacobian << "\n");
+
+    Eigen::MatrixXd inverseJacobian(6, 6);
+    inverseJacobian = jacobian.inverse();
+    ROS_INFO_STREAM("inverseJacobian: \n" << inverseJacobian << "\n");
+    
+    Eigen::MatrixXd ide = inverseJacobian*jacobian;
+    ROS_INFO_STREAM("ide: \n" << inverseJacobian*jacobian << "\n");
+
+
+
+
+    Eigen::MatrixXd endEffectorVelocitiesMatrix(6, 1);
+    endEffectorVelocitiesMatrix << endEffectorVelocities[0], endEffectorVelocities[1], endEffectorVelocities[2], endEffectorVelocities[3], endEffectorVelocities[4], endEffectorVelocities[5];
+    ROS_INFO_STREAM("bumbum: \n" << endEffectorVelocitiesMatrix << "\n");
+
+
+
+
+    Eigen::MatrixXd jointVelocitiesMatrix = inverseJacobian*endEffectorVelocitiesMatrix;
+    ROS_INFO_STREAM("bumbum: \n" << jointVelocitiesMatrix << "\n");
+
+    std::vector<double> jointVelocities;
+    jointVelocities.push_back(jointVelocitiesMatrix(0, 0));
+    jointVelocities.push_back(jointVelocitiesMatrix(1, 0));
+    jointVelocities.push_back(jointVelocitiesMatrix(2, 0));
+    jointVelocities.push_back(jointVelocitiesMatrix(3, 0));
+    jointVelocities.push_back(jointVelocitiesMatrix(4, 0));
+    jointVelocities.push_back(jointVelocitiesMatrix(5, 0));
+
+    return jointVelocities;
+}
+
+
+
+
+
 
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "robot_model_and_robot_state_tutorial");
+    ros::init(argc, argv, "add_two_ints_client");
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
     static const std::string PLANNING_GROUP = "manipulator";
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
-    jointTarget();
+    //jointTarget();
 
     geometry_msgs::Pose start_pose = move_group.getCurrentPose().pose;
 
@@ -139,6 +190,70 @@ int main(int argc, char** argv) {
 
 
 
+
+
+
+
+    geometry_msgs::Pose test_pose;
+    test_pose.position.x = 0.5;
+    test_pose.position.y = 0.45;
+    test_pose.position.z = 0.5;
+    test_pose.orientation.w = 0.4;
+    test_pose.orientation.x = 0.5;
+    test_pose.orientation.y = -0.6922559;
+    test_pose.orientation.z = 0.0206427;
+    move_group.setPoseTarget(test_pose);
+    moveit::planning_interface::MoveGroupInterface::Plan test_plan;
+    move_group.plan(test_plan);
+    move_group.move();
+
+    std::vector<double> currentJointValues = move_group.getCurrentJointValues();
+    ROS_INFO("joint: %f", currentJointValues[0]);
+    ROS_INFO("joint: %f", currentJointValues[1]);
+    ROS_INFO("joint: %f", currentJointValues[2]);
+    ROS_INFO("joint: %f", currentJointValues[3]);
+    ROS_INFO("joint: %f", currentJointValues[4]);
+    ROS_INFO("joint: %f", currentJointValues[5]);
+
+
+
+    ros::init(argc, argv, "inverse_kinematics_client");
+    ros::NodeHandle n;
+    ros::ServiceClient client = n.serviceClient<lego_throwing::FindBestInverseKinematicsSolution>("inverse_kinematics");
+    lego_throwing::FindBestInverseKinematicsSolution srv;
+
+    srv.request.pose = test_pose;
+    srv.request.jointAngles = currentJointValues;
+
+    if (client.call(srv)) {
+        std::vector<double> bestSolution = srv.response.bestSolution;
+        ROS_INFO("Sum: %f", bestSolution[1]);
+
+
+
+        moveit::planning_interface::MoveGroupInterface move_group2(PLANNING_GROUP);
+        moveit::planning_interface::MoveGroupInterface::Plan my_plan2;
+        move_group2.setJointValueTarget(bestSolution);
+        move_group2.setNumPlanningAttempts(10);
+        move_group2.plan(my_plan2);
+        move_group2.execute(my_plan2);
+
+    } else {
+        ROS_ERROR("Failed to call service add_two_ints");
+        return 1;
+    }
+
+
+
+
+
+
+
+
+    //std::vector<double> test = getJointVelocities({0.2, 0.2, 0.3, 0.0, 0.0, 0.0}, {1.3, 1.7, 0.2, 0.5, 0.6, 0.8});
+
+
+
     std::vector<double> joint_start;
     joint_start.push_back(0.1);
     joint_start.push_back(-pi/2);
@@ -146,6 +261,15 @@ int main(int argc, char** argv) {
     joint_start.push_back(0.0);
     joint_start.push_back(0.0);
     joint_start.push_back(0.0);
+
+    std::vector<double> joint_start_vel;
+    joint_start_vel.push_back(0.0);
+    joint_start_vel.push_back(0.0);
+    joint_start_vel.push_back(0.0);
+    joint_start_vel.push_back(0.0);
+    joint_start_vel.push_back(0.0);
+    joint_start_vel.push_back(0.0);
+
 
 
     std::vector<double> joint_goal;
@@ -156,9 +280,19 @@ int main(int argc, char** argv) {
     joint_goal.push_back(0.0);
     joint_goal.push_back(0.0);
 
+    std::vector<double> joint_goal_vel;
+    joint_goal_vel.push_back(0.0);
+    joint_goal_vel.push_back(0.0);
+    joint_goal_vel.push_back(0.0);
+    joint_goal_vel.push_back(0.0);
+    joint_goal_vel.push_back(0.0);
+    joint_goal_vel.push_back(0.0);
 
 
-    double travelTime = 3.0;
+
+
+
+    double travelTime = 5.0;
 
 
     double a0j1 = joint_start[0];
@@ -169,33 +303,33 @@ int main(int argc, char** argv) {
     double a0j5 = joint_start[4];
     double a0j6 = joint_start[5];
 
-    double a1j1 = 0;
+    double a1j1 = joint_start_vel[0];
     ROS_INFO("a1j1 is this: %f", a1j1);
-    double a1j2 = 0;
-    double a1j3 = 0;
-    double a1j4 = 0;
-    double a1j5 = 0;
-    double a1j6 = 0;
+    double a1j2 = joint_start_vel[1];
+    double a1j3 = joint_start_vel[2];
+    double a1j4 = joint_start_vel[3];
+    double a1j5 = joint_start_vel[4];
+    double a1j6 = joint_start_vel[5];
 
-    double a2j1 = (3/pow(travelTime, 2))*(joint_goal[0] - joint_start[0]);
+    double a2j1 = (3/pow(travelTime, 2)) * (joint_goal[0] - joint_start[0]) - (2/travelTime) * joint_start_vel[0] - (1/travelTime) * joint_goal_vel[0];
     ROS_INFO("a2j1 is this: %f", a2j1);
-    double a2j2 = (3/pow(travelTime, 2))*(joint_goal[1] - joint_start[1]);
-    double a2j3 = (3/pow(travelTime, 2))*(joint_goal[2] - joint_start[2]);
-    double a2j4 = (3/pow(travelTime, 2))*(joint_goal[3] - joint_start[3]);
-    double a2j5 = (3/pow(travelTime, 2))*(joint_goal[4] - joint_start[4]);
-    double a2j6 = (3/pow(travelTime, 2))*(joint_goal[5] - joint_start[5]);
+    double a2j2 = (3/pow(travelTime, 2)) * (joint_goal[1] - joint_start[1]) - (2/travelTime) * joint_start_vel[1] - (1/travelTime) * joint_goal_vel[1];
+    double a2j3 = (3/pow(travelTime, 2)) * (joint_goal[2] - joint_start[2]) - (2/travelTime) * joint_start_vel[2] - (1/travelTime) * joint_goal_vel[2];
+    double a2j4 = (3/pow(travelTime, 2)) * (joint_goal[3] - joint_start[3]) - (2/travelTime) * joint_start_vel[3] - (1/travelTime) * joint_goal_vel[3];
+    double a2j5 = (3/pow(travelTime, 2)) * (joint_goal[4] - joint_start[4]) - (2/travelTime) * joint_start_vel[4] - (1/travelTime) * joint_goal_vel[4];
+    double a2j6 = (3/pow(travelTime, 2)) * (joint_goal[5] - joint_start[5]) - (2/travelTime) * joint_start_vel[5] - (1/travelTime) * joint_goal_vel[5];
 
-    double a3j1 = -(2/pow(travelTime, 3))*(joint_goal[0] - joint_start[0]);
+    double a3j1 = -(2/pow(travelTime, 3)) * (joint_goal[0] - joint_start[0]) + (1/pow(travelTime, 2)) * (joint_goal_vel[0] - joint_start_vel[0]);
     ROS_INFO("a3j1 is this: %f", a3j1);
-    double a3j2 = -(2/pow(travelTime, 3))*(joint_goal[1] - joint_start[1]);
-    double a3j3 = -(2/pow(travelTime, 3))*(joint_goal[2] - joint_start[2]);
-    double a3j4 = -(2/pow(travelTime, 3))*(joint_goal[3] - joint_start[3]);
-    double a3j5 = -(2/pow(travelTime, 3))*(joint_goal[4] - joint_start[4]);
-    double a3j6 = -(2/pow(travelTime, 3))*(joint_goal[5] - joint_start[5]);
+    double a3j2 = -(2/pow(travelTime, 3)) * (joint_goal[1] - joint_start[1]) + (1/pow(travelTime, 2)) * (joint_goal_vel[1] - joint_start_vel[1]);
+    double a3j3 = -(2/pow(travelTime, 3)) * (joint_goal[2] - joint_start[2]) + (1/pow(travelTime, 2)) * (joint_goal_vel[2] - joint_start_vel[2]);
+    double a3j4 = -(2/pow(travelTime, 3)) * (joint_goal[3] - joint_start[3]) + (1/pow(travelTime, 2)) * (joint_goal_vel[3] - joint_start_vel[3]);
+    double a3j5 = -(2/pow(travelTime, 3)) * (joint_goal[4] - joint_start[4]) + (1/pow(travelTime, 2)) * (joint_goal_vel[4] - joint_start_vel[4]);
+    double a3j6 = -(2/pow(travelTime, 3)) * (joint_goal[5] - joint_start[5]) + (1/pow(travelTime, 2)) * (joint_goal_vel[5] - joint_start_vel[5]);
 
 
 
-    int n = 10;
+    int steps = 10;
 
 
 
@@ -220,11 +354,11 @@ int main(int argc, char** argv) {
     //trajectory2.joint_trajectory.points = trajectory.joint_trajectory.points;
 
 
-    for (int i = 0; i <= n; i++) {
+    for (int i = 0; i <= steps; i++) {
         ROS_INFO("size: %i", trajectory2.joint_trajectory.points.size());
         trajectory_msgs::JointTrajectoryPoint point;
 
-        double time = (travelTime/n)*i;
+        double time = (travelTime/steps)*i;
         ROS_INFO("the time is: %f", time);
 
         std::vector<double> pos;
@@ -254,23 +388,6 @@ int main(int argc, char** argv) {
         acc.push_back(2*a2j1 + 6*a3j1*time);
         
 
-/*
-        std::vector<double> vel;
-        vel.push_back(0.0);
-        vel.push_back(0.0);
-        vel.push_back(0.0);
-        vel.push_back(0.0);
-        vel.push_back(0.0);
-        vel.push_back(0.0);
-
-        std::vector<double> acc;
-        acc.push_back(0.0);
-        acc.push_back(0.0);
-        acc.push_back(0.0);
-        acc.push_back(0.0);
-        acc.push_back(0.0);
-        acc.push_back(0.0);
-*/
 
 
         point.positions = pos;
@@ -292,11 +409,10 @@ int main(int argc, char** argv) {
 
 
 
-    move_group.execute(trajectory2);
+    //move_group.execute(trajectory2);
+
 
     ROS_INFO("done john");
 
     return 1;
-
-    // get joint position, velocity and acceleration for n intervals
 }

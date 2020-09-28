@@ -59,6 +59,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
+   FindBestInverseKinematicsSolution.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -69,10 +70,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -106,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES lego_throwing
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -214,3 +216,29 @@ target_link_libraries(addCollisionObject ${catkin_LIBRARIES})
 
 add_executable(needForSpeed src/needForSpeed.cpp)
 target_link_libraries(needForSpeed ${catkin_LIBRARIES})
+
+add_executable(newtonThrow src/newtonThrow.cpp)
+target_link_libraries(newtonThrow ${catkin_LIBRARIES})
+
+
+
+catkin_install_python(PROGRAMS scripts/talker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+catkin_install_python(PROGRAMS scripts/talker.py scripts/listener.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+
+catkin_install_python(PROGRAMS scripts/inverse_kinematics_server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+
+catkin_install_python(PROGRAMS scripts/inverse_kinematics_server.py scripts/add_two_ints_client.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
