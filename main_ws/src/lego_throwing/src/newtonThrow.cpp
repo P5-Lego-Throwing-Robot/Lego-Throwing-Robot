@@ -3,7 +3,7 @@
 #include <math.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
     
-    
+
 const std::string PLANNING_GROUP = "manipulator";
 const double PI = M_PI;
 
@@ -206,6 +206,15 @@ moveit_msgs::RobotTrajectory addToATrajectory(moveit_msgs::RobotTrajectory traje
     }
 
     return trajectory;
+}
+
+
+moveit_msgs::RobotTrajectory scaleTrajectory(moveit_msgs::RobotTrajectory trajectory, double velocity) {
+    for (int i = 0; i < trajectory.joint_trajectory.points.size(); i++) {
+        for (int j = 0; j < 6; j++) {
+            trajectory.joint_trajectory.points[i].positions[j].
+        }
+    }
 }
 
 
