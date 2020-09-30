@@ -43,7 +43,7 @@ void subscriberCallback(const std_msgs::UInt16& button_msg) {
 
 
 ros::Publisher button_publisher("button_press", &button_msg);
-ros::Subscriber<std_msgs::UInt16> open_gripper_subscriber("button", &subscriberCallback);
+ros::Subscriber<std_msgs::UInt16> open_gripper_subscriber("button_press", &subscriberCallback);
 
 void setup()
 {
