@@ -8,7 +8,7 @@ const std::string PLANNING_GROUP = "manipulator";
 const double PI = M_PI;
 
 double throwingVelocity = 1.0; // m/s
-double throwingAngle = PI/4; // radians
+double throwingAngle = (PI*4)/16; // radians
 double offset = 0.109492;
 /*
 std::vector<double> joint_position_start{0.0, -PI/2, (PI*3)/4, 0.0, PI/2, 0.0};
@@ -21,9 +21,9 @@ std::vector<double> joint_position_throw{0.0, -(PI*5)/8, -(PI*1)/8, 0.0, PI/2, 0
 std::vector<double> joint_position_end{0.0, -(PI*5)/8, -(PI*1)/8, 0.0, PI/2, 0.0};
 */
 
-std::vector<double> joint_position_start{0.0, -(PI*4)/16, (PI*11.0)/16, (PI*0)/16, PI/2, 0.0};
-std::vector<double> joint_position_throw{0.0, -(PI*4)/16, (PI*8)/16, -(PI*6)/16, PI/2, 0.0};
-std::vector<double> joint_position_end{0.0, -(PI*4)/16, (PI*8)/16, -(PI*6)/16, PI/2, 0.0};
+std::vector<double> joint_position_start{0.0, -(PI*13)/16, -(PI*5)/16, (PI*0)/16, PI/2, 0.0};
+std::vector<double> joint_position_throw{0.0, -(PI*10)/16, -(PI*2)/16, -(PI*0)/16, PI/2, 0.0};
+std::vector<double> joint_position_end{0.0, -(PI*10)/16, -(PI*2)/16, -(PI*0)/16, PI/2, 0.0};
 //std::vector<double> joint_position_end{0.0, -(PI*4)/16, (PI*11.0)/16, (PI*0)/16, PI/2, 0.0};
 
 double getJointOneAngle(double x, double y) {
@@ -231,11 +231,9 @@ int main(int argc, char** argv) {
     ROS_INFO("Hello Newton");
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
-    //goToJointPosition(joint_position_start);
-
     std::vector<double> throwingVelocityVector = vectorizeThrowingVelocity(throwingVelocity, throwingAngle);
     throwingVelocityVector.push_back(0.0);
-    throwingVelocityVector.push_back(-3.0);
+    throwingVelocityVector.push_back(-2.0);
     throwingVelocityVector.push_back(0.0);
     std::vector<double> jointVelocitiesVector = getJointVelocities(throwingVelocityVector, joint_position_throw);
 
@@ -254,13 +252,13 @@ int main(int argc, char** argv) {
     std::vector<double> joint_position_start2 = joint_position_start;
     joint_position_start2[0] = deg;
 
-
+/*
     for (int i = 0; i < 10; i++) {
         moveit_msgs::RobotTrajectory trajectory2 = scaleTrajectory(trajectory, 1.0 + (i * 0.5), deg);
         goToJointPosition(joint_position_start2);
         move_group.execute(trajectory2);
     }
-
+*/
 
 
     ROS_INFO("x: %f", throwingVelocityVector[0]);
@@ -279,8 +277,9 @@ int main(int argc, char** argv) {
     goToJointPosition(joint_position_end);
     goToJointPosition(joint_position_start);
     */
-
-    //move_group.execute(trajectory);
+   
+    goToJointPosition(joint_position_start);
+    move_group.execute(trajectory);
 
     double test_vel = get_throwing_velocity(0.0, 0.0, 2.0, 0.0, PI/4);
     ROS_INFO("test_vel: %f", test_vel);
