@@ -22,8 +22,8 @@ std::vector<double> joint_position_end{0.0, -(PI*5)/8, -(PI*1)/8, 0.0, PI/2, 0.0
 */
 
 std::vector<double> joint_position_start{0.0, -(PI*4)/16, (PI*11.0)/16, (PI*0)/16, PI/2, 0.0};
-std::vector<double> joint_position_throw{0.0, -(PI*4)/16, (PI*8)/16, -(PI*6)/16, PI/2, 0.0};
-std::vector<double> joint_position_end{0.0, -(PI*4)/16, (PI*8)/16, -(PI*6)/16, PI/2, 0.0};
+std::vector<double> joint_position_throw{0.0, -(PI*4)/16, (PI*8)/16, -(PI*3)/16, PI/2, 0.0};
+std::vector<double> joint_position_end{0.0, -(PI*4)/16, (PI*8)/16, -(PI*3)/16, PI/2, 0.0};
 //std::vector<double> joint_position_end{0.0, -(PI*4)/16, (PI*11.0)/16, (PI*0)/16, PI/2, 0.0};
 
 double getJointOneAngle(double x, double y) {
@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
 
     std::vector<double> throwingVelocityVector = vectorizeThrowingVelocity(throwingVelocity, throwingAngle);
     throwingVelocityVector.push_back(0.0);
-    throwingVelocityVector.push_back(-3.0);
+    throwingVelocityVector.push_back(-3.3);
     throwingVelocityVector.push_back(0.0);
     std::vector<double> jointVelocitiesVector = getJointVelocities(throwingVelocityVector, joint_position_throw);
 
@@ -247,20 +247,24 @@ int main(int argc, char** argv) {
     std::vector<double> ZeroVelocityVector{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     trajectory = addToATrajectory(trajectory, joint_position_start, joint_position_throw, ZeroVelocityVector, jointVelocitiesVector, time, 20, true, 0.0);
     trajectory = addToATrajectory(trajectory, joint_position_throw, joint_position_end, jointVelocitiesVector, ZeroVelocityVector, 3.0, 20, false, time);
-    //trajectory = scaleTrajectory(trajectory, 1.0);
 
 
     double deg = -(PI*3)/4;
     std::vector<double> joint_position_start2 = joint_position_start;
     joint_position_start2[0] = deg;
 
+    trajectory = scaleTrajectory(trajectory, 2.6, deg);
 
+    goToJointPosition(joint_position_start2);
+    move_group.execute(trajectory);
+
+/*
     for (int i = 0; i < 10; i++) {
-        moveit_msgs::RobotTrajectory trajectory2 = scaleTrajectory(trajectory, 1.0 + (i * 0.5), deg);
+        moveit_msgs::RobotTrajectory trajectory2 = scaleTrajectory(trajectory, 1.0 + (i * 0.25), deg);
         goToJointPosition(joint_position_start2);
         move_group.execute(trajectory2);
     }
-
+*/
 
 
     ROS_INFO("x: %f", throwingVelocityVector[0]);
