@@ -212,3 +212,6 @@ target_link_libraries(throw ${catkin_LIBRARIES})
 
 add_executable(addCollisionObject src/addCollisionObject.cpp)
 target_link_libraries(addCollisionObject ${catkin_LIBRARIES})
+
+add_executable(EE_Vel_pub src/EE_Vel_pub.cpp)
+target_link_libraries(EE_Vel_pub ${catkin_LIBRARIES})
