@@ -223,6 +223,9 @@ target_link_libraries(newtonThrow ${catkin_LIBRARIES})
 add_executable(overhand src/overhand.cpp)
 target_link_libraries(overhand ${catkin_LIBRARIES})
 
+add_executable(ludicrousThrow src/ludicrousThrow.cpp)
+target_link_libraries(ludicrousThrow ${catkin_LIBRARIES})
+
 
 catkin_install_python(PROGRAMS scripts/talker.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
