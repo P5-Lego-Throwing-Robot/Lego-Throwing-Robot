@@ -4,6 +4,10 @@ project(lego_throwing)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+#set OpenCV path
+set(OpenCV_DIR "/usr/share/OpenCV/")
+
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -221,5 +225,5 @@ target_link_libraries(throw ${catkin_LIBRARIES})
 add_executable(addCollisionObject src/addCollisionObject.cpp)
 target_link_libraries(addCollisionObject ${catkin_LIBRARIES})
 
-add_executable(yeet_localization src/realsenseVision.cpp)
+add_executable(yeet_localization src/realsense.cpp)
 target_link_libraries(yeet_localization PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBS} ${REALSENSE2_FOUND} -lzbar)

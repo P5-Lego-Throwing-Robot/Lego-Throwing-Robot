@@ -8,7 +8,6 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <librealsense2/hpp/rs_pipeline.hpp>
-#include <cv.hpp>
 #include <zbar.h>
 #include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
@@ -104,30 +103,8 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
     cv::Mat homographyImage;
     int counter = 0;
 
-
     // Four corners of the plane in of the real world
     std::vector<cv::Point2f> pts_src(4);
-
-    /*
-    for (int i = 0; i < objects.size(); ++i) {
-        if (objects[i].data == "00") {
-            pts_src.at(counter) = cv::Point2f(30, 35);
-            counter++;
-        }
-        if (objects[i].data == "01") {
-            pts_src.at(counter) = cv::Point2f(30, 185);
-            counter++;
-        }
-        if (objects[i].data == "02") {
-            pts_src.at(counter) = cv::Point2f(265, 35);
-            counter++;
-        }
-        if (objects[i].data == "03") {
-            pts_src.at(counter) = cv::Point2f(265, 185);
-            counter++;
-        }
-    }
-*/
 
     for (int i = 0; i < objects.size(); ++i) {
         if (objects[i].data == "00") {
@@ -172,14 +149,15 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
     cv::resizeWindow("homography", 1000, 1000);
     cv::imshow("homography", hImage);
 
-
     for (int i = 0; i < objects.size(); ++i) {
         if (objects[i].data == "Yeeeet") {
             printf("Yeeet coordinates: %d, %d\n", objects[i].center.x, objects[i].center.y);
 
-            std::vector<cv::Point2f> yeetPoints(2);
+            // Load ck::Point in as cv::Point2f
+            std::vector<cv::Point2f> yeetPoints(1);
             yeetPoints[0] = objects[i].center;
 
+            // Multiply point with homography matrix
             perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
             printf("Yeeet prime coordinates: %f, %f\n", yeetPoints[0].x, yeetPoints[0].y);
 
@@ -191,7 +169,6 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
             ros::shutdown();
         }
     }
-
 }
 
 int main(int argc, char *argv[]) {
