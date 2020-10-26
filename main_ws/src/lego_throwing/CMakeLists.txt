@@ -8,12 +8,20 @@ project(lego_throwing)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  moveit_ros_planning_interface
-  moveit_visual_tools
-)
+        roscpp
+        rospy
+        std_msgs
+        moveit_ros_planning_interface
+        moveit_visual_tools
+        OpenCV
+        )
+
+## Realsense
+find_library(REALSENSE2_FOUND realsense2 REQUIRED)
+if (NOT REALSENSE2_FOUND)
+    message(WARN "Failed to find_library(realsense2)")
+endif ()
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -105,10 +113,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES lego_throwing
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+        #  INCLUDE_DIRS include
+        #  LIBRARIES lego_throwing
+        #  CATKIN_DEPENDS roscpp rospy std_msgs
+        #  DEPENDS system_lib
 )
 
 ###########
@@ -118,8 +126,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+        # include
+        ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -212,3 +220,6 @@ target_link_libraries(throw ${catkin_LIBRARIES})
 
 add_executable(addCollisionObject src/addCollisionObject.cpp)
 target_link_libraries(addCollisionObject ${catkin_LIBRARIES})
+
+add_executable(yeet_localization src/realsenseVision.cpp)
+target_link_libraries(yeet_localization PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBS} ${REALSENSE2_FOUND} -lzbar)
