@@ -32,7 +32,7 @@ const std::vector <std::string> qrCustomNames = {
         "Yellow"
 };
 
-std::vector <Object> customQRDetected(12); // Initially we can only detect 12 custom objects or else we crash
+std::vector <Object> customQRDetected; // Initially we can only detect 12 custom objects or else we crash
 
 // Publisher for ROS topic
 ros::Publisher yeetLocationPublisher;
@@ -177,42 +177,41 @@ void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
     for (int i = 0; i < objects.size(); ++i) {
         if (std::find(std::begin(qrCustomNames), std::end(qrCustomNames), objects[i].data) != std::end(qrCustomNames)) {
 
-
             // Check if the packaging QR code already exists
             for (int j = 0; j < customQRDetected.size(); ++j) {
                 if (objects[i].data == customQRDetected[j].data) // It exists
                     return;
-                else { // We have a new object
-                    // Alert main node we have a new object
-                    customQRDetected.push_back(objects[i]);
-                    // Publish etc...
-
-
-                    std::vector <cv::Point2f> yeetPoints(1);
-                    yeetPoints[0] = objects[i].center;
-
-                    // Multiply point with homography matrix
-                    perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
-                    printf("%s coordinates: %f, %f\n", objects[i].data.c_str(), yeetPoints[0].x, yeetPoints[0].y);
-
-                    float xRobotOffset = 28; //cm
-                    float yRobotOffset = 73; // cm
-
-                    auto xWithOffsetInMeters = static_cast<float>(((yeetPoints[0].x - xRobotOffset)) / 100);
-                    auto yWithOffsetInMeters = static_cast<float>(((yeetPoints[0].y + yRobotOffset)) / 100);
-
-                    //geometry_msgs::ourMessage yeetMsg;
-                    geometry_msgs::Vector3 yeetMsg;
-                    yeetMsg.x = xWithOffsetInMeters;
-                    yeetMsg.y = yWithOffsetInMeters;
-                    yeetMsg.z = 0.045;
-                    //yeetMsg.name = customQRDetected[j].data;
-                    //yeetLocationPublisher.publish(yeetMsg);
-                    //ros::shutdown();
-                }
             }
+            // If we reach this far we have a new object
+
+            // Alert main node we have a new object
+            customQRDetected.push_back(objects[i]);
+            // Publish etc...
+
+            std::vector <cv::Point2f> yeetPoints(1);
+            yeetPoints[0] = objects[i].center;
+
+            // Multiply point with homography matrix
+            perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
+            printf("%s coordinates: %f, %f\n", objects[i].data.c_str(), yeetPoints[0].x, yeetPoints[0].y);
+
+            float xRobotOffset = 28; //cm
+            float yRobotOffset = 73; // cm
+
+            auto xWithOffsetInMeters = static_cast<float>(((yeetPoints[0].x - xRobotOffset)) / 100);
+            auto yWithOffsetInMeters = static_cast<float>(((yeetPoints[0].y + yRobotOffset)) / 100);
+
+            //geometry_msgs::ourMessage yeetMsg;
+            geometry_msgs::Vector3 yeetMsg;
+            yeetMsg.x = xWithOffsetInMeters;
+            yeetMsg.y = yWithOffsetInMeters;
+            yeetMsg.z = 0.045;
+            //yeetMsg.name = customQRDetected[j].data;
+            //yeetLocationPublisher.publish(yeetMsg);
+            //ros::shutdown();
         }
     }
+
 }
 
 int main(int argc, char *argv[]) {
