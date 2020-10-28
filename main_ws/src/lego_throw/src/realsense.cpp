@@ -8,21 +8,10 @@
 #include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
 
-// Add names for QR codes here if you add more QR codes to scene
-const std::vector<std::string> qrCustomNames = {
-        "Blue",
-        "Red",
-        "Yellow"
-};
-
-// Publisher for ROS topic
-ros::Publisher yeetLocationPublisher;
-
 
 struct Object : public cv::_InputArray {
-    std::string type;
     std::string data;
-    std::vector<cv::Point> location;
+    std::vector <cv::Point> location;
     cv::Point center;
 };
 
@@ -35,6 +24,18 @@ struct Frame {
     cv::Mat matImage;
     uint32_t count = 0;
 };
+
+// Add names for QR codes here if you add more QR codes to scene
+const std::vector <std::string> qrCustomNames = {
+        "Blue",
+        "Red",
+        "Yellow"
+};
+
+std::vector <Object> customQRDetected(12); // Initially we can only detect 12 custom objects or else we crash
+
+// Publisher for ROS topic
+ros::Publisher yeetLocationPublisher;
 
 
 // Get a frame from realsense
@@ -52,7 +53,7 @@ void retrieveFrame(const rs2::pipeline &pipe, Frame *frame) {
 }
 
 // Find and decode barcodes and QR codes
-void decode(cv::Mat &im, std::vector<Object> &decodedObjects) {
+void decode(cv::Mat &im, std::vector <Object> &decodedObjects) {
 
     // Create zbar scanner
     zbar::ImageScanner scanner;
@@ -73,7 +74,6 @@ void decode(cv::Mat &im, std::vector<Object> &decodedObjects) {
     // Print results
     for (zbar::Image::SymbolIterator symbol = image.symbol_begin(); symbol != image.symbol_end(); ++symbol) {
         Object obj;
-        obj.type = symbol->get_type_name();
         obj.data = symbol->get_data();
 
         // Obtain location
@@ -95,14 +95,16 @@ void decode(cv::Mat &im, std::vector<Object> &decodedObjects) {
 }
 
 
-void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
+void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
 
     // Four corners of the plane in of the real world is added to each QR code
-    std::vector<cv::Point2f> cornersForPlane(4);
+    std::vector <cv::Point2f> cornersForPlane(4);
     // Put QR positions into a new vector of cv::Point2f, this new type is needed for findHomography(...);
     // Corner QR codes should be filtered from custom qr codes which is why we loop through them.
-    std::vector<cv::Point2f> QrCamCoordinates(4);
+    std::vector <cv::Point2f> QrCamCoordinates(4);
     int amountQRCornersFound = 0;
+
+    /*
     //ROBOT TABLE POINTS
     for (int i = 0; i < objects.size(); ++i) {
         switch (objects[i].data) {
@@ -132,8 +134,8 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
 
         }
 
-    }
-/*
+    } */
+
     // A4 PAPER TEST POINTS IN mm
     for (int i = 0; i < objects.size(); ++i) {
         if (objects[i].data == "00") {
@@ -156,7 +158,7 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
             QrCamCoordinates[amountQRCornersFound] = objects[i].center;
             amountQRCornersFound++;
         }
-    } */
+    }
     // If we didn't find 4 QR corners then stop executing and return to main loop
     if (amountQRCornersFound != 4)
         return;
@@ -171,30 +173,44 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
     cv::namedWindow("homography", cv::WINDOW_FULLSCREEN);
     cv::imshow("homography", hImage);
 
-    // TODO Sort for multiple objects
+    // Check if packaging QR codes have been found
     for (int i = 0; i < objects.size(); ++i) {
-        if (objects[i].data == "Yeeeet") {
-            printf("Red coordinates: %d, %d\n", objects[i].center.x, objects[i].center.y);
-            // Load ck::Point in as cv::Point2f
-            std::vector<cv::Point2f> yeetPoints(1);
-            yeetPoints[0] = objects[i].center;
+        if (std::find(std::begin(qrCustomNames), std::end(qrCustomNames), objects[i].data) != std::end(qrCustomNames)) {
 
-            // Multiply point with homography matrix
-            perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
-            printf("Red prime coordinates: %f, %f\n", yeetPoints[0].x, yeetPoints[0].y);
 
-            float xRobotOffset = 28; //cm
-            float yRobotOffset = 73; // cm
+            // Check if the packaging QR code already exists
+            for (int j = 0; j < customQRDetected.size(); ++j) {
+                if (objects[i].data == customQRDetected[j].data) // It exists
+                    return;
+                else { // We have a new object
+                    // Alert main node we have a new object
+                    customQRDetected.push_back(objects[i]);
+                    // Publish etc...
 
-            auto xWithOffsetInMeters = static_cast<float>(((yeetPoints[0].x - xRobotOffset)) / 100);
-            auto yWithOffsetInMeters = static_cast<float>(((yeetPoints[0].y + yRobotOffset)) / 100);
 
-            geometry_msgs::Vector3 yeetMsg;
-            yeetMsg.x = xWithOffsetInMeters;
-            yeetMsg.y = yWithOffsetInMeters;
-            yeetMsg.z = 0.045;
-            yeetLocationPublisher.publish(yeetMsg);
-            ros::shutdown();
+                    std::vector <cv::Point2f> yeetPoints(1);
+                    yeetPoints[0] = objects[i].center;
+
+                    // Multiply point with homography matrix
+                    perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
+                    printf("%s coordinates: %f, %f\n", objects[i].data.c_str(), yeetPoints[0].x, yeetPoints[0].y);
+
+                    float xRobotOffset = 28; //cm
+                    float yRobotOffset = 73; // cm
+
+                    auto xWithOffsetInMeters = static_cast<float>(((yeetPoints[0].x - xRobotOffset)) / 100);
+                    auto yWithOffsetInMeters = static_cast<float>(((yeetPoints[0].y + yRobotOffset)) / 100);
+
+                    //geometry_msgs::ourMessage yeetMsg;
+                    geometry_msgs::Vector3 yeetMsg;
+                    yeetMsg.x = xWithOffsetInMeters;
+                    yeetMsg.y = yWithOffsetInMeters;
+                    yeetMsg.z = 0.045;
+                    //yeetMsg.name = customQRDetected[j].data;
+                    //yeetLocationPublisher.publish(yeetMsg);
+                    //ros::shutdown();
+                }
+            }
         }
     }
 }
@@ -217,7 +233,7 @@ int main(int argc, char *argv[]) {
     // QR CODES STUFF
     printf("Start filming the scene\n");
     while (ros::ok()) {
-        std::vector<Object> decodedObjects;
+        std::vector <Object> decodedObjects;
 
         retrieveFrame(pipe, &frame);
         // Find the QR codes
