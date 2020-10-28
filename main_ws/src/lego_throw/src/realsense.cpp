@@ -102,34 +102,36 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
     // Put QR positions into a new vector of cv::Point2f, this new type is needed for findHomography(...);
     // Corner QR codes should be filtered from custom qr codes which is why we loop through them.
     std::vector<cv::Point2f> QrCamCoordinates(4);
-
     int amountQRCornersFound = 0;
     //ROBOT TABLE POINTS
     for (int i = 0; i < objects.size(); ++i) {
-        if (objects[i].data == "00") {
-            cornersForPlane[amountQRCornersFound] = cv::Point2f(0, 0);
-            //cornersForPlane[amountQRCornersFound] = cv::Point2f(15, 11);
-            QrCamCoordinates[amountQRCornersFound] = objects[i].center;
-            amountQRCornersFound++;
+        switch (objects[i].data) {
+            case "00":
+                cornersForPlane[amountQRCornersFound] = cv::Point2f(0, 0);
+                QrCamCoordinates[amountQRCornersFound] = objects[i].center;
+                amountQRCornersFound++;
+                break;
+
+            case "01":
+                cornersForPlane[amountQRCornersFound] = cv::Point2f(71, 0);
+                QrCamCoordinates[amountQRCornersFound] = objects[i].center;
+                amountQRCornersFound++;
+                break;
+            case "02":
+                cornersForPlane[amountQRCornersFound] = cv::Point2f(0, 74);
+                QrCamCoordinates[amountQRCornersFound] = objects[i].center;
+                amountQRCornersFound++;
+                break;
+            case "03":
+                cornersForPlane[amountQRCornersFound] = cv::Point2f(74, 71);
+                QrCamCoordinates[amountQRCornersFound] = objects[i].center;
+                amountQRCornersFound++;
+                break;
+            default:
+
+
         }
-        if (objects[i].data == "01") {
-            cornersForPlane[amountQRCornersFound] = cv::Point2f(71, 0);
-            //cornersForPlane[amountQRCornersFound] = cv::Point2f(73, 11);
-            QrCamCoordinates[amountQRCornersFound] = objects[i].center;
-            amountQRCornersFound++;
-        }
-        if (objects[i].data == "02") {
-            cornersForPlane[amountQRCornersFound] = cv::Point2f(0, 74);
-            //cornersForPlane[amountQRCornersFound] = cv::Point2f(15, 71);
-            QrCamCoordinates[amountQRCornersFound] = objects[i].center;
-            amountQRCornersFound++;
-        }
-        if (objects[i].data == "03") {
-            cornersForPlane[amountQRCornersFound] = cv::Point2f(74, 71);
-            //cornersForPlane[amountQRCornersFound] = cv::Point2f(73, 71);
-            QrCamCoordinates[amountQRCornersFound] = objects[i].center;
-            amountQRCornersFound++;
-        }
+
     }
 /*
     // A4 PAPER TEST POINTS IN mm
