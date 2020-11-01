@@ -66,11 +66,10 @@ endif ()
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+        FILES
+        camera.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -80,10 +79,10 @@ endif ()
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+        DEPENDENCIES
+        std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -222,5 +221,5 @@ target_link_libraries(yeet_localization PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBS
 add_executable(ludicrousThrow src/ludicrousThrow.cpp)
 target_link_libraries(ludicrousThrow ${catkin_LIBRARIES})
 
-add_executable(testing src/testing.cpp)
-target_link_libraries(testing ${catkin_LIBRARIES})
+add_executable(server_test src/server_test.cpp)
+target_link_libraries(server_test ${catkin_LIBRARIES})

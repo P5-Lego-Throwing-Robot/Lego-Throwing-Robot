@@ -7,6 +7,7 @@
 #include <zbar.h>
 #include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
+#include "lego_throw/camera.h"
 
 
 struct Object : public cv::_InputArray {
@@ -215,6 +216,23 @@ void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
 }
 
 int main(int argc, char *argv[]) {
+    // --- ROS STUFF
+    ros::init(argc, argv, "realsenseVision");
+    ros::NodeHandle node_handle;
+    yeetLocationPublisher = node_handle.advertise<geometry_msgs::Vector3>("box_position", 1000);
+
+    // --- SERVICE TEST --- DELETE AFTER MONDAY
+    ros::ServiceClient client = node_handle.serviceClient<lego_throw::camera>("camera");
+    lego_throw::camera camSrv;
+    camSrv.request.x = 2.0f;
+    camSrv.request.y = 1.0f;
+    camSrv.request.z = 0.0f;
+    camSrv.request.data = "Yeeet ;)";
+
+    client.call(camSrv);
+    printf("Response status: %i\n", camSrv.response.status);
+
+
     // -- REALSENSE SETUP --
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
@@ -224,10 +242,6 @@ int main(int argc, char *argv[]) {
     Frame frame;
     // QR contents
 
-    // --- ROS STUFF
-    ros::init(argc, argv, "realsenseVision");
-    ros::NodeHandle node_handle;
-    yeetLocationPublisher = node_handle.advertise<geometry_msgs::Vector3>("box_position", 1000);
 
     // QR CODES STUFF
     printf("Start filming the scene\n");
