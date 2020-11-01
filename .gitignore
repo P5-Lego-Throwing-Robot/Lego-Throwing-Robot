@@ -2,3 +2,4 @@ main_ws/build/
 main_ws/devel/
 src/fmauch_universal_robot/
 src/Universal_Robots_ROS_Driver/
+src/lego_throw/cmake-build-debug/
