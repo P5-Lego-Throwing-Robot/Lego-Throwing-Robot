@@ -23,7 +23,6 @@ struct Frame {
     uint height{};
     uint width{};
     cv::Mat matImage;
-    uint32_t count = 0;
 };
 
 // Add names for QR codes here if you add more QR codes to scene
@@ -42,16 +41,16 @@ ros::ServiceClient client;
 
 // Get a frame from realsense
 void retrieveFrame(const rs2::pipeline &pipe, Frame *frame) {
+    // Retrieve Frame
     frame->frameset = pipe.wait_for_frames();
     frame->colorFrame = frame->frameset.get_color_frame();
     //frame->depthFrame = frame->frameset.get_depth_frame(); // We do not need depth frame for anything.. yet
+
+    // Create MatImage
     frame->width = frame->colorFrame.as<rs2::video_frame>().get_width();
     frame->height = frame->colorFrame.as<rs2::video_frame>().get_height();
-    frame->matImage = cv::Mat(cv::Size(frame->width, frame->height), CV_8UC3, (void *) frame->colorFrame.get_data(),
-                            node_handle  cv::Mat::AUTO_STEP);
+    frame->matImage = cv::Mat(cv::Size(frame->width, frame->height), CV_8UC3, (void *) frame->colorFrame.get_data(),cv::Mat::AUTO_STEP);
 
-    // Increment frame number
-    frame->count++;
 }
 
 // Find and decode barcodes and QR codes
@@ -191,7 +190,7 @@ void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
             customQRDetected.push_back(objects[i]);
 
             // Prepare data for perspectiveTransform
-            std::vector<cv::Point2f> transposedPoint {objects[i].center};
+            std::vector<cv::Point2f> transposedPoint{objects[i].center};
             // Multiply point with homography matrix to transform to plane. Funtion input is cv::InputArray or a std::vector
             perspectiveTransform(transposedPoint, transposedPoint, hMatrix);
 
@@ -232,12 +231,11 @@ int main(int argc, char *argv[]) {
     Frame frame;                            // Create frame handle
 
     printf("Start filming the scene\n");
-    while (ros::ok()){
+    while (ros::ok()) {
         std::vector<Object> decodedObjects;
-
-        retrieveFrame(pipe, &frame);                               // Retrieve a set of frames from Realsense camera
-        decode(frame.matImage, decodedObjects);              // Find the QR codes and store them in vector
-        cvtColor(frame.matImage, frame.matImage, CV_BGR2RGB); // Convert image to RGB to display correct channels to cv::imshow
+        retrieveFrame(pipe, &frame);                                // Retrieve a set of frames from Realsense camera and make a cv::Mat image
+        decode(frame.matImage, decodedObjects);               // Find the QR codes and store them in vector
+        cvtColor(frame.matImage, frame.matImage,CV_BGR2RGB);   // Convert image to RGB to display correct channels to cv::imshow
         cv::imshow("Image", frame.matImage);
 
         if (decodedObjects.size() > 3)                              // Dont bother checking for corners unless we have 4 or more corners
