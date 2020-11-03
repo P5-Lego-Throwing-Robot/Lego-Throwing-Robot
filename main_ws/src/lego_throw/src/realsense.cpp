@@ -12,8 +12,8 @@
 
 struct Object : public cv::_InputArray {
     std::string data;
-    std::vector <cv::Point> location;
-    cv::Point center;
+    std::vector<cv::Point2f> location;
+    cv::Point2f center;
 };
 
 struct Frame {
@@ -27,16 +27,17 @@ struct Frame {
 };
 
 // Add names for QR codes here if you add more QR codes to scene
-const std::vector <std::string> qrCustomNames = {
-        "Blue",
-        "Red",
-        "Yellow"
+const std::vector<std::string> qrCustomNames = {
+        "ID_1",
+        "ID_2",
+        "ID_3",
+        "ID_4",
+        "ID_5"
 };
+std::vector<Object> customQRDetected; // Initially we can only detect 12 custom objects or else we crash
 
-std::vector <Object> customQRDetected; // Initially we can only detect 12 custom objects or else we crash
-
-// Publisher for ROS topic
-ros::Publisher yeetLocationPublisher;
+// service client
+ros::ServiceClient client;
 
 
 // Get a frame from realsense
@@ -47,14 +48,14 @@ void retrieveFrame(const rs2::pipeline &pipe, Frame *frame) {
     frame->width = frame->colorFrame.as<rs2::video_frame>().get_width();
     frame->height = frame->colorFrame.as<rs2::video_frame>().get_height();
     frame->matImage = cv::Mat(cv::Size(frame->width, frame->height), CV_8UC3, (void *) frame->colorFrame.get_data(),
-                              cv::Mat::AUTO_STEP);
+                            node_handle  cv::Mat::AUTO_STEP);
 
     // Increment frame number
     frame->count++;
 }
 
 // Find and decode barcodes and QR codes
-void decode(cv::Mat &im, std::vector <Object> &decodedObjects) {
+void decode(cv::Mat &im, std::vector<Object> &decodedObjects) {
 
     // Create zbar scanner
     zbar::ImageScanner scanner;
@@ -96,13 +97,12 @@ void decode(cv::Mat &im, std::vector <Object> &decodedObjects) {
 }
 
 
-void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
-
+void doHomography(const std::vector<Object> objects, cv::Mat colorImage) {
     // Four corners of the plane in of the real world is added to each QR code
-    std::vector <cv::Point2f> cornersForPlane(4);
+    std::vector<cv::Point2f> cornersForPlane(4);
     // Put QR positions into a new vector of cv::Point2f, this new type is needed for findHomography(...);
     // Corner QR codes should be filtered from custom qr codes which is why we loop through them.
-    std::vector <cv::Point2f> QrCamCoordinates(4);
+    std::vector<cv::Point2f> QrCamCoordinates(4);
     int amountQRCornersFound = 0;
 
     /*
@@ -160,6 +160,7 @@ void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
             amountQRCornersFound++;
         }
     }
+
     // If we didn't find 4 QR corners then stop executing and return to main loop
     if (amountQRCornersFound != 4)
         return;
@@ -171,45 +172,48 @@ void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
     cv::Mat hImage;
     //Warp source image to destination based on homography
     warpPerspective(colorImage, hImage, hMatrix, cv::Size(500, 500));
-    cv::namedWindow("homography", cv::WINDOW_FULLSCREEN);
-    cv::imshow("homography", hImage);
+    //cv::namedWindow("homography", cv::WINDOW_FULLSCREEN);
+    //cv::imshow("homography", hImage);
+
 
     // Check if packaging QR codes have been found
     for (int i = 0; i < objects.size(); ++i) {
-        if (std::find(std::begin(qrCustomNames), std::end(qrCustomNames), objects[i].data) != std::end(qrCustomNames)) {
+        std::vector<std::string>::const_iterator it;
+        it = std::find(std::begin(qrCustomNames), std::end(qrCustomNames), objects[i].data);
 
+        if (it != std::end(qrCustomNames)) {
             // Check if the packaging QR code already exists
             for (int j = 0; j < customQRDetected.size(); ++j) {
                 if (objects[i].data == customQRDetected[j].data) // It exists
                     return;
             }
-            // If we reach this far we have a new object
-
-            // Alert main node we have a new object
+            // If we reach this far we have a new object push this into a vector. This vector is global
             customQRDetected.push_back(objects[i]);
-            // Publish etc...
 
-            std::vector <cv::Point2f> yeetPoints(1);
-            yeetPoints[0] = objects[i].center;
+            // Prepare data for perspectiveTransform
+            std::vector<cv::Point2f> transposedPoint {objects[i].center};
+            // Multiply point with homography matrix to transform to plane. Funtion input is cv::InputArray or a std::vector
+            perspectiveTransform(transposedPoint, transposedPoint, hMatrix);
 
-            // Multiply point with homography matrix
-            perspectiveTransform(yeetPoints, yeetPoints, hMatrix);
-            printf("%s coordinates: %f, %f\n", objects[i].data.c_str(), yeetPoints[0].x, yeetPoints[0].y);
-
+            // Measured offset from robot
             float xRobotOffset = 28; //cm
             float yRobotOffset = 73; // cm
 
-            auto xWithOffsetInMeters = static_cast<float>(((yeetPoints[0].x - xRobotOffset)) / 100);
-            auto yWithOffsetInMeters = static_cast<float>(((yeetPoints[0].y + yRobotOffset)) / 100);
+            auto xWithOffsetInMeters = static_cast<float>(((transposedPoint[0].x - xRobotOffset)) / 100);
+            auto yWithOffsetInMeters = static_cast<float>(((transposedPoint[0].y + yRobotOffset)) / 100);
 
-            //geometry_msgs::ourMessage yeetMsg;
-            geometry_msgs::Vector3 yeetMsg;
-            yeetMsg.x = xWithOffsetInMeters;
-            yeetMsg.y = yWithOffsetInMeters;
-            yeetMsg.z = 0.045;
-            //yeetMsg.name = customQRDetected[j].data;
-            //yeetLocationPublisher.publish(yeetMsg);
-            //ros::shutdown();
+            lego_throw::camera camSrv;
+
+            camSrv.request.x = xWithOffsetInMeters;
+            camSrv.request.y = yWithOffsetInMeters;
+            camSrv.request.z = 0.045;
+            camSrv.request.data = *it;
+
+            printf("%s: x =  %f, y = %f\n", objects[i].data.c_str(), camSrv.request.x, camSrv.request.y);
+
+            if (client.call(camSrv)) printf("Response status: %i\n", static_cast<int>(camSrv.response.status));
+
+
         }
     }
 
@@ -218,49 +222,28 @@ void doHomography(const std::vector <Object> objects, cv::Mat colorImage) {
 int main(int argc, char *argv[]) {
     // --- ROS STUFF
     ros::init(argc, argv, "realsenseVision");
-    ros::NodeHandle node_handle;
-    yeetLocationPublisher = node_handle.advertise<geometry_msgs::Vector3>("box_position", 1000);
-
-    // --- SERVICE TEST --- DELETE AFTER MONDAY
-    ros::ServiceClient client = node_handle.serviceClient<lego_throw::camera>("camera");
-    lego_throw::camera camSrv;
-    camSrv.request.x = 2.0f;
-    camSrv.request.y = 1.0f;
-    camSrv.request.z = 0.0f;
-    camSrv.request.data = "Yeeet ;)";
-
-    client.call(camSrv);
-    printf("Response status: %i\n", camSrv.response.status);
-
+    ros::NodeHandle nodeHandle;
+    client = nodeHandle.serviceClient<lego_throw::camera>("camera");
+    //client.waitForExistence();
 
     // -- REALSENSE SETUP --
-    // Declare RealSense pipeline, encapsulating the actual device and sensors
-    rs2::pipeline pipe;
-    // Start streaming with default recommended configuration
-    pipe.start();
-    // define frame handle
-    Frame frame;
-    // QR contents
+    rs2::pipeline pipe;                     // Declare RealSense pipeline, encapsulating the actual device and sensors
+    pipe.start();                           // Start streaming with default recommended configuration
+    Frame frame;                            // Create frame handle
 
-
-    // QR CODES STUFF
     printf("Start filming the scene\n");
-    while (ros::ok()) {
-        std::vector <Object> decodedObjects;
+    while (ros::ok()){
+        std::vector<Object> decodedObjects;
 
-        retrieveFrame(pipe, &frame);
-        // Find the QR codes
-        decode(frame.matImage, decodedObjects);
-
-        cvtColor(frame.matImage, frame.matImage, CV_BGR2RGB);
+        retrieveFrame(pipe, &frame);                               // Retrieve a set of frames from Realsense camera
+        decode(frame.matImage, decodedObjects);              // Find the QR codes and store them in vector
+        cvtColor(frame.matImage, frame.matImage, CV_BGR2RGB); // Convert image to RGB to display correct channels to cv::imshow
         cv::imshow("Image", frame.matImage);
 
-        // Dont bother checking for corners unless we have 4 or more corners
-        if (decodedObjects.size() > 3)
-            doHomography(decodedObjects, frame.matImage);
+        if (decodedObjects.size() > 3)                              // Dont bother checking for corners unless we have 4 or more corners
+            doHomography(decodedObjects, frame.matImage);           // Check for 4 corners and a throwing target
 
         if (cv::waitKey(25) == 27) break;
-
     }
     return 0;
 }
